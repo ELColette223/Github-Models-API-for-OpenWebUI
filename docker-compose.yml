@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    network_mode: host
+    ports:
+      - "8000:80"
+    restart: always
+    environment:
+      PORT: 80
+      GITHUB_API_URL: "https://models.inference.ai.azure.com"
+      LOG_LEVEL: "debug"
