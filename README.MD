@@ -10,6 +10,10 @@ The API receives requests in the same format used by OpenWebUI (compatible with 
 
 You need to have access to [Github Models](https://github.com/marketplace/models) and an personal API.
 
+Remote API
+----------
+You can use the remote API if you prefer just add this URL as the endpoint for the OpenAI API: `https://github-models-api-for-open-web-ui.vercel.app`
+
 Running the API
 ---------------
 
