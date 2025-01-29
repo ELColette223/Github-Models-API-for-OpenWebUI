@@ -11,7 +11,7 @@ app = FastAPI()
 GITHUB_API_URL = os.getenv("GITHUB_API_URL", 'https://models.inference.ai.azure.com')
 
 # Cache file for models
-CACHE_STATUS = os.getenv("CACHE_STATUS", False)
+CACHE_STATUS = os.getenv("CACHE_STATUS", "False").lower() == "true"  # Boolean
 CACHE_FILE = "models_cache.json"
 CACHE_DURATION = 1 * 60 * 60  # 1 hour in seconds
 
@@ -28,9 +28,12 @@ def fetch_models_from_api():
         models = response.json()
 
         if CACHE_STATUS:
-            # Save the models to cache (JSON file)
-            with open(CACHE_FILE, 'w') as cache_file:
-                json.dump(models, cache_file)
+            # Save the models to cache (JSON file) if caching is enabled
+            try:
+                with open(CACHE_FILE, 'w') as cache_file:
+                    json.dump(models, cache_file)
+            except OSError as e:
+                debug_print("Error writing cache file:", e)
 
         return models
     except requests.RequestException as e:
