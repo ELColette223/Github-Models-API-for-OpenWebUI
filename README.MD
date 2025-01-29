@@ -47,7 +47,7 @@ Running the API
     
 2.  **Run the API:**
     
-        python3 -m uvicorn main:app --host 0.0.0.0 --port 80 --reload --log-level debug
+        python3 -m uvicorn main:app --host 0.0.0.0 --port 80 --reload
     
 3.  **Access the API:**
     

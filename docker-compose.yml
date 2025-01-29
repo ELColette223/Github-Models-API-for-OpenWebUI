@@ -10,4 +10,4 @@ services:
     environment:
       PORT: 80
       GITHUB_API_URL: "https://models.inference.ai.azure.com"
-      LOG_LEVEL: "debug"
+      DEBUG: False # Set to True to enable debug mode

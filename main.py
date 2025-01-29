@@ -8,11 +8,16 @@ from fastapi.responses import StreamingResponse, JSONResponse
 app = FastAPI()
 
 # Settings for the target API
-GITHUB_API_URL = 'https://models.inference.ai.azure.com'
+GITHUB_API_URL = os.getenv("GITHUB_API_URL", 'https://models.inference.ai.azure.com')
 
 # Cache file for models
 CACHE_FILE = "models_cache.json"
-CACHE_DURATION = 12 * 60 * 60  # 12 hours in seconds
+CACHE_DURATION = 1 * 60 * 60  # 1 hour in seconds
+
+# Debug level
+def debug_print(*args):
+    if os.getenv("LOG_LEVEL", False):
+        print(*args)
 
 # Function to fetch models from the API
 def fetch_models_from_api():
@@ -49,20 +54,24 @@ def get_model_name(model_id_or_friendly_name):
     for model in models:
         # Check if model is 'id'
         if model['id'] == model_id_or_friendly_name:
-            print("Model found:", model['name'])
+            debug_print("Model found:", model['name'])
             return model['name']
         
         # Check if model is 'friendly_name' or 'name'
         if model['friendly_name'] == model_id_or_friendly_name or model['name'] == model_id_or_friendly_name:
-            print("Model found:", model['name'])
+            debug_print("Model found:", model['name'])
             return model['name']  # Always return the 'name', not 'friendly_name'
     return None
 
 # Função para streaming de resposta
 async def stream_response(response):
-    for chunk in response.iter_content(chunk_size=1024):
-        if chunk:
-            yield chunk.decode()
+    try:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                yield chunk.decode(errors="ignore")  # Evita que caracteres corrompidos quebrem o stream
+    except requests.exceptions.ChunkedEncodingError:
+        debug_print("Erro: Resposta interrompida pelo servidor.")
+        yield "Error: Response was interrupted."
 
 # Função para streaming de eventos
 async def event_stream_response(response):
@@ -90,7 +99,7 @@ async def proxy_all_requests(request: Request, path: str):
     if body:
         model = body.get('model', None)  # Modelo especificado no corpo
 
-    print("MODEL:", model)
+    debug_print("MODEL:", model)
 
     if model:
         # Now the function checks if the provided name is a 'name' or 'friendly_name'
@@ -110,9 +119,9 @@ async def proxy_all_requests(request: Request, path: str):
             )
 
     # Debugging: print the headers and request body
-    print("HEADERS RECEIVED:", original_headers)
-    print("BODY RECEIVED:", body)
-    print("MODEL_NAME:", MODEL_NAME)
+    debug_print("HEADERS RECEIVED:", original_headers)
+    debug_print("BODY RECEIVED:", body)
+    debug_print("MODEL_NAME:", MODEL_NAME)
 
     # Extract the authorization token from the original request
     auth_header = original_headers.get('authorization', original_headers.get('Authorization', None))
@@ -122,6 +131,7 @@ async def proxy_all_requests(request: Request, path: str):
 
     # Build the headers for the request that will be sent to the target API
     headers = {
+        'Connection': 'keep-alive',  # Keep the connection alive
         'Authorization': auth_header,  # Use the client's authorization token
         'Content-Type': original_headers.get('content-type', 'application/json')
     }
