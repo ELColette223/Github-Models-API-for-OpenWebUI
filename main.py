@@ -11,7 +11,7 @@ app = FastAPI()
 GITHUB_API_URL = os.getenv("GITHUB_API_URL", 'https://models.inference.ai.azure.com')
 
 # Cache file for models
-CACHE_FILE = "models_cache.json"
+CACHE_FILE = "/tmp/models_cache.json"
 CACHE_DURATION = 1 * 60 * 60  # 1 hour in seconds
 
 # Debug level
