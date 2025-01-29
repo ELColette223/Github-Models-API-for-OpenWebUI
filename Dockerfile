@@ -17,8 +17,11 @@ COPY . .
 ENV PORT=80
 ENV GITHUB_API_URL=https://models.inference.ai.azure.com
 
-# True or False
+# True or False for Debug
 ENV DEBUG=True 
+
+# True or False for cache
+ENV CACHE_STATUS=False
 
 # Expor a porta
 EXPOSE $PORT

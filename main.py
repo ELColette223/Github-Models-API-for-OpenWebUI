@@ -11,7 +11,8 @@ app = FastAPI()
 GITHUB_API_URL = os.getenv("GITHUB_API_URL", 'https://models.inference.ai.azure.com')
 
 # Cache file for models
-CACHE_FILE = "/tmp/models_cache.json"
+CACHE_STATUS = os.getenv("CACHE_STATUS", False)
+CACHE_FILE = "models_cache.json"
 CACHE_DURATION = 1 * 60 * 60  # 1 hour in seconds
 
 # Debug level
@@ -25,15 +26,21 @@ def fetch_models_from_api():
         response = requests.get(f"{GITHUB_API_URL}/models")
         response.raise_for_status()
         models = response.json()
-        # Save the models to cache (JSON file)
-        with open(CACHE_FILE, 'w') as cache_file:
-            json.dump(models, cache_file)
+
+        if CACHE_STATUS:
+            # Save the models to cache (JSON file)
+            with open(CACHE_FILE, 'w') as cache_file:
+                json.dump(models, cache_file)
+
         return models
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Error fetching models from API: {str(e)}")
 
 # Function to load models from cache or API if the cache is expired
 def load_models():
+    if not CACHE_STATUS:
+        return fetch_models_from_api()
+    
     if os.path.exists(CACHE_FILE):
         # Check if the cache file is older than 12 hours
         last_modified = os.path.getmtime(CACHE_FILE)
